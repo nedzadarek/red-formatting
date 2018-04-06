@@ -82,7 +82,11 @@ foreach val [
 	":(rejoin [a b]):"
 	"a:(a + b):b"
 ][test-composite-with val o]
-	
+
+; testing fun refinement
+print [Command: {composite "Age :('f/b):"} "::" "expected: " "Age fb" "::" "returned: " composite "Age :('f/b):"]
+print [Command: {composite/fun "Age :('f/b):" :mold} "::" "expected: " "Age 'f/b" "::" "returned: " composite/fun "Age :('f/b):" :mold]
+
 print ""
 
 halt

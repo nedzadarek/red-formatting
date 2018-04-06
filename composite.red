@@ -18,7 +18,7 @@ composite-ctx: context [
 		/local res
 	][
 		expr: load expr
-		; If expression evaluates to a non-block value that is anything other than a 
+		; If expression evaluates to a non-block value that is anything other than a
 		; word, we can't bind it.
 		if all [ctx  any [block? :expr  word? :expr]][bind expr ctx]
 		either error? set/any 'res try [do expr][
@@ -40,8 +40,10 @@ composite-ctx: context [
 		/marks markers [block!] "Use custom expression markers in place of :( and ):"
 		/with ctx [object!] "Evaluate the expressions in the given context"
 		/err-val e "Use instead of formed error info from eval error"
+		/fun fun1 "Function used to convert results to string"
 		/local expr expr-beg= expr-end= pos
 	][
+		unless fun [fun1: func [src] [src]]
 		if all [marks  not parse markers [2 [char! | string! | tag!]]][
 			cause-error 'script 'invalid-arg [arg1: markers]
 			;cause-error 'script 'invalid-data [arg1: markers]
@@ -54,11 +56,11 @@ composite-ctx: context [
 			; will pass through unscathed. That would adhere to Postel's Law
 			; (https://en.wikipedia.org/wiki/Robustness_principle), but I think that's a
 			; bad criteria when we're evaluating expressions. R2's build-markup treats
-			; an unterminated expression as a full expression to the end of input, and 
+			; an unterminated expression as a full expression to the end of input, and
 			; an uninitiated expression as data thru the expr-end marker.
 			any [
 				end break
-				| change [expr-beg= copy expr to expr-end= expr-end=] (eval expr e ctx)
+				| change [expr-beg= copy expr to expr-end= expr-end=] (fun1 eval expr e ctx)
 				| expr-beg= pos: to end (cause-error 'syntax 'missing [arg1: expr-end= arg2: pos])
 				| to expr-beg= ; find the next expression
 				| pos: to expr-end= (cause-error 'syntax 'missing [arg1: expr-beg= arg2: pos])
@@ -77,7 +79,7 @@ composite-ctx: context [
 ;composite {Some Red expressions like :(":(3 + 2):"): = :(3 + 2):}
 ;composite {Some Red expressions like :(":():"): = :(3 + 2):}
 
-	
+
 ;composite-ctx: context [
 ;
 ;	eval: func [
@@ -97,7 +99,7 @@ composite-ctx: context [
 ;	; on the inside.
 ;	expr-beg=: ":("
 ;	expr-end=: "):"
-;	
+;
 ;	; One of the big questions is what to do if there are mismatched expr
 ;	; markers. We can treat them as errors, or just pass through them, so
 ;	; they will be visible in the output. We can support both behaviors
